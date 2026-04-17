@@ -268,8 +268,9 @@
 
   <script>
     // ── Config ──────────────────────────────────────────────
-    const CIRC = 2 * Math.PI * 152;   // circumference of ring
-    let totalSeconds  = 5 * 60;        // default 5 min
+    const CIRC              = 2 * Math.PI * 152;  // circumference of ring
+    const FLASH_THRESHOLD   = 30;                  // seconds remaining at which body starts flashing red
+    let totalSeconds  = 5 * 60;                    // default 5 min
     let remaining     = totalSeconds;
     let intervalId    = null;
     let running       = false;
@@ -317,8 +318,8 @@
       ring.style.strokeDashoffset = CIRC * (1 - ratio);
       applyColor(ratio);
 
-      // Flash body when < 30 s
-      if (remaining <= 30 && running) {
+      // Flash body when fewer than FLASH_THRESHOLD seconds remain
+      if (remaining <= FLASH_THRESHOLD && running) {
         document.body.classList.add('flash-red');
       } else {
         document.body.classList.remove('flash-red');

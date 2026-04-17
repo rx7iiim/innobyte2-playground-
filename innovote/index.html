@@ -339,7 +339,8 @@
         team.votes++;
         saveState();
         render();
-        // Flash
+        // CSS.escape() guards against team names containing special CSS characters
+        // (e.g. brackets, quotes) that would break the attribute selector.
         const newCard = list.querySelector(`[data-name="${CSS.escape(name)}"]`);
         if (newCard) {
           newCard.style.animation = 'none';
