@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧊 Ice-Breaker Generator – InnoByte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #001f3f, #003366, #00274d);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      color: #e8f4fd;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 6px;
+      text-align: center;
+      text-shadow: 0 0 20px rgba(100,210,255,0.6);
+    }
+
+    .subtitle {
+      color: #7bafc8;
+      font-size: 0.9rem;
+      margin-bottom: 36px;
+      text-align: center;
+    }
+
+    /* ── Category pills ── */
+    .categories {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .cat-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #a8d8ea;
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .cat-btn:hover,
+    .cat-btn.active {
+      background: rgba(100,210,255,0.18);
+      border-color: #64d2ff;
+      color: #fff;
+    }
+
+    /* ── Prompt card ── */
+    .card-wrapper {
+      perspective: 800px;
+      margin-bottom: 30px;
+    }
+
+    .prompt-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(100,210,255,0.25);
+      border-radius: 20px;
+      padding: 36px 40px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(100,210,255,0.1);
+      transition: transform 0.05s;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .prompt-card .category-tag {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #64d2ff;
+      opacity: 0.8;
+    }
+
+    .prompt-text {
+      font-size: clamp(1rem, 3vw, 1.35rem);
+      line-height: 1.55;
+      font-weight: 500;
+      color: #e8f4fd;
+      min-height: 3em;
+    }
+
+    .prompt-card .type-badge {
+      display: inline-block;
+      background: rgba(100,210,255,0.12);
+      border: 1px solid rgba(100,210,255,0.3);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      color: #a8d8ea;
+    }
+
+    /* ── Flip animation ── */
+    .prompt-card.flip-out {
+      animation: flipOut 0.18s ease forwards;
+    }
+    .prompt-card.flip-in {
+      animation: flipIn 0.22s ease forwards;
+    }
+    @keyframes flipOut {
+      to { transform: rotateX(90deg); opacity: 0; }
+    }
+    @keyframes flipIn {
+      from { transform: rotateX(-90deg); opacity: 0; }
+      to   { transform: rotateX(0deg);  opacity: 1; }
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #00b4d8, #0077b6);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 40px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(0,119,182,0.5);
+      transition: transform 0.1s, box-shadow 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .btn-generate:hover { transform: scale(1.05); box-shadow: 0 6px 32px rgba(0,119,182,0.7); }
+    .btn-generate:active { transform: scale(0.97); }
+
+    .btn-fav {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8f4fd;
+      border-radius: 50px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-fav:hover { background: rgba(255,220,80,0.15); border-color: #ffd700; }
+    .btn-fav.saved { color: #ffd700; border-color: #ffd700; }
+
+    /* ── Saved list ── */
+    .saved-section {
+      margin-top: 36px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .saved-section h3 {
+      font-size: 0.82rem;
+      color: #64d2ff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .saved-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .saved-list::-webkit-scrollbar { width: 6px; }
+    .saved-list::-webkit-scrollbar-thumb { background: #334; border-radius: 3px; }
+
+    .saved-list li {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: #c0d8e8;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .saved-list li button {
+      background: none;
+      border: none;
+      color: #546e7a;
+      cursor: pointer;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .saved-list li button:hover { color: #ef5350; }
+
+    .no-saved { color: #546e7a; font-size: 0.85rem; }
+
+    /* ── Counter ── */
+    .counter {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: #546e7a;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧊 Ice-Breaker Generator</h1>
+  <p class="subtitle">Break the ice with a random scientific debate or quirky "Would You Rather"!</p>
+
+  <!-- Category filter -->
+  <div class="categories" id="cat-bar">
+    <button class="cat-btn active" data-cat="all">🌐 All</button>
+    <button class="cat-btn" data-cat="space">🚀 Space</button>
+    <button class="cat-btn" data-cat="biology">🧬 Biology</button>
+    <button class="cat-btn" data-cat="tech">💻 Tech</button>
+    <button class="cat-btn" data-cat="physics">⚛️ Physics</button>
+    <button class="cat-btn" data-cat="would-you-rather">🤔 Would You Rather</button>
+  </div>
+
+  <!-- Prompt card -->
+  <div class="card-wrapper">
+    <div class="prompt-card" id="prompt-card">
+      <span class="category-tag" id="prompt-cat">–</span>
+      <p class="prompt-text" id="prompt-text">Hit the button below to get your first icebreaker!</p>
+      <span class="type-badge" id="prompt-type"></span>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-generate" id="gen-btn">🎲 Generate!</button>
+    <button class="btn-fav" id="fav-btn" title="Save this prompt">⭐ Save</button>
+  </div>
+
+  <p class="counter" id="counter"></p>
+
+  <!-- Saved prompts -->
+  <div class="saved-section" id="saved-section" style="display:none">
+    <h3>⭐ Saved Prompts</h3>
+    <ul class="saved-list" id="saved-list"></ul>
+  </div>
+
+  <script>
+    // ── Data ─────────────────────────────────────────────────
+    const prompts = [
+      // Space
+      { cat: 'space', type: 'Debate',           text: 'Is Pluto a planet? Defend your answer with at least two scientific arguments.' },
+      { cat: 'space', type: 'Debate',           text: 'Should humans colonise Mars, or should we fix Earth first?' },
+      { cat: 'space', type: 'Debate',           text: 'Are we alone in the universe? What probability would you assign to extraterrestrial life?' },
+      { cat: 'space', type: 'Debate',           text: 'Would you rather live on the Moon with Earth-view, or on Mars with full Martian citizenship?' },
+      { cat: 'space', type: 'Thought Experiment', text: 'If you could send one human invention to an alien civilisation, what would it be and why?' },
+      { cat: 'space', type: 'Quick Take',       text: 'Dark matter: fascinating scientific mystery or evidence that our models are just wrong?' },
+      { cat: 'space', type: 'Debate',           text: 'Is a manned mission to Jupiter\'s moon Europa worth the cost and risk?' },
+
+      // Biology
+      { cat: 'biology', type: 'Debate',         text: 'Is a virus alive? What criteria define "life"?' },
+      { cat: 'biology', type: 'Debate',         text: 'CRISPR gene editing: medical miracle or ethical minefield?' },
+      { cat: 'biology', type: 'Thought Experiment', text: 'If you could give every human being one genetic superpower, what would you choose and what would be the unintended consequences?' },
+      { cat: 'biology', type: 'Quick Take',     text: 'Humans vs. dolphins: who is truly the more intelligent species?' },
+      { cat: 'biology', type: 'Debate',         text: 'Should we bring back extinct species like woolly mammoths using de-extinction technology?' },
+      { cat: 'biology', type: 'Debate',         text: 'Is ageing a disease that should be cured, or a natural process that should be embraced?' },
+      { cat: 'biology', type: 'Quick Take',     text: 'What is more impressive from an evolutionary standpoint: the human brain or the octopus immune system?' },
+
+      // Tech
+      { cat: 'tech', type: 'Debate',            text: 'Will artificial general intelligence be humanity\'s greatest achievement or its last?' },
+      { cat: 'tech', type: 'Debate',            text: 'Open-source AI vs. closed-source AI: which is safer for society?' },
+      { cat: 'tech', type: 'Thought Experiment', text: 'If the internet shut down for 30 days globally, what positive and negative effects would emerge?' },
+      { cat: 'tech', type: 'Quick Take',        text: 'Is social media doing more harm than good for scientific communication?' },
+      { cat: 'tech', type: 'Debate',            text: 'Should self-driving cars ever be allowed to make ethical decisions (e.g., the trolley problem)?' },
+      { cat: 'tech', type: 'Debate',            text: 'Is the metaverse a genuine technological revolution or an overhyped distraction?' },
+      { cat: 'tech', type: 'Quick Take',        text: 'Blockchain: revolutionary distributed ledger or solution looking for a problem?' },
+
+      // Physics
+      { cat: 'physics', type: 'Debate',         text: 'Is time travel theoretically possible? What paradoxes would we need to resolve first?' },
+      { cat: 'physics', type: 'Thought Experiment', text: 'If you could instantly understand one unsolved physics problem, which would you pick: dark energy, quantum gravity, or the arrow of time?' },
+      { cat: 'physics', type: 'Quick Take',     text: 'Many-worlds interpretation vs. Copenhagen interpretation: which feels more scientifically honest?' },
+      { cat: 'physics', type: 'Debate',         text: 'Is string theory still a useful scientific framework, or has it become unfalsifiable and thus unscientific?' },
+      { cat: 'physics', type: 'Debate',         text: 'Could a perpetual motion machine ever be built if we discovered new physics, or is thermodynamics truly inviolable?' },
+      { cat: 'physics', type: 'Quick Take',     text: 'Is light fundamentally a wave, a particle, or have we been asking the wrong question?' },
+
+      // Would You Rather
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather have perfect memory of everything you\'ve ever seen, or be able to learn any skill in one day?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather explore the deepest ocean trench or the surface of Mars (survival guaranteed)?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather live 200 years in the past or 200 years in the future?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather be able to communicate with animals or speak every human language fluently?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather have unlimited clean energy today, or a cure for all cancers?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather colonise space but never return to Earth, or stay on Earth and solve all its problems?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather discover proof of alien life, or discover a unified theory of everything in physics?' },
+      { cat: 'would-you-rather', type: 'Would You Rather', text: 'Would you rather be the person who invents a teleportation device or a time machine (only one can exist)?' },
+    ];
+
+    // ── State ─────────────────────────────────────────────────
+    let activeCategory  = 'all';
+    let currentPrompt   = null;
+    let lastPromptIdx   = -1;
+    let saved           = JSON.parse(localStorage.getItem('icebreaker_saved') || '[]');
+
+    // ── Elements ──────────────────────────────────────────────
+    const card      = document.getElementById('prompt-card');
+    const catEl     = document.getElementById('prompt-cat');
+    const textEl    = document.getElementById('prompt-text');
+    const typeEl    = document.getElementById('prompt-type');
+    const genBtn    = document.getElementById('gen-btn');
+    const favBtn    = document.getElementById('fav-btn');
+    const counterEl = document.getElementById('counter');
+
+    // ── Category buttons ──────────────────────────────────────
+    document.getElementById('cat-bar').addEventListener('click', e => {
+      const btn = e.target.closest('.cat-btn');
+      if (!btn) return;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      lastPromptIdx  = -1;
+      generate();
+    });
+
+    // ── Generate ──────────────────────────────────────────────
+    function filteredPrompts() {
+      return activeCategory === 'all' ? prompts : prompts.filter(p => p.cat === activeCategory);
+    }
+
+    function catLabel(cat) {
+      const map = { space: '🚀 Space', biology: '🧬 Biology', tech: '💻 Tech', physics: '⚛️ Physics', 'would-you-rather': '🤔 Would You Rather' };
+      return map[cat] || cat;
+    }
+
+    function generate() {
+      const pool = filteredPrompts();
+      if (pool.length === 0) return;
+
+      let idx;
+      do { idx = Math.floor(Math.random() * pool.length); }
+      while (pool.length > 1 && idx === lastPromptIdx);
+      lastPromptIdx = idx;
+      currentPrompt = pool[idx];
+
+      // Flip animation
+      card.classList.remove('flip-in', 'flip-out');
+      void card.offsetWidth;
+      card.classList.add('flip-out');
+
+      setTimeout(() => {
+        catEl.textContent  = catLabel(currentPrompt.cat);
+        textEl.textContent = currentPrompt.text;
+        typeEl.textContent = currentPrompt.type;
+        card.classList.remove('flip-out');
+        card.classList.add('flip-in');
+        counterEl.textContent = `${filteredPrompts().length} prompts in this category`;
+        updateFavBtn();
+      }, 190);
+    }
+
+    // ── Favourites ────────────────────────────────────────────
+    function isSaved(prompt) {
+      return saved.some(s => s.text === prompt.text);
+    }
+
+    function updateFavBtn() {
+      if (!currentPrompt) return;
+      const s = isSaved(currentPrompt);
+      favBtn.classList.toggle('saved', s);
+      favBtn.textContent = s ? '★ Saved' : '⭐ Save';
+    }
+
+    favBtn.addEventListener('click', () => {
+      if (!currentPrompt) return;
+      if (isSaved(currentPrompt)) {
+        saved = saved.filter(s => s.text !== currentPrompt.text);
+      } else {
+        saved.push({ ...currentPrompt });
+      }
+      localStorage.setItem('icebreaker_saved', JSON.stringify(saved));
+      updateFavBtn();
+      renderSaved();
+    });
+
+    function renderSaved() {
+      const section = document.getElementById('saved-section');
+      const ul      = document.getElementById('saved-list');
+      if (saved.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = '';
+      ul.innerHTML = '';
+      saved.forEach((p, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${escHtml(p.text)}</span><button data-i="${i}" title="Remove">✕</button>`;
+        ul.appendChild(li);
+      });
+      ul.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          saved.splice(+btn.dataset.i, 1);
+          localStorage.setItem('icebreaker_saved', JSON.stringify(saved));
+          updateFavBtn();
+          renderSaved();
+        });
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    genBtn.addEventListener('click', generate);
+
+    // ── Keyboard shortcut ─────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (document.activeElement === document.body || document.activeElement === genBtn) {
+          e.preventDefault();
+          generate();
+        }
+      }
+    });
+
+    // ── Init ──────────────────────────────────────────────────
+    counterEl.textContent = `${prompts.length} prompts total`;
+    renderSaved();
+    generate();
+  </script>
+</body>
+</html>

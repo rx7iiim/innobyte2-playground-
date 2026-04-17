@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚀 InnoByte Event Utils</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(160deg, #0d0d1a 0%, #0d1b2e 50%, #0d0d1a 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      color: #e8f1ff;
+    }
+
+    /* ── Header ── */
+    .header { text-align: center; margin-bottom: 54px; }
+
+    .logo { font-size: 3rem; margin-bottom: 10px; }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      background: linear-gradient(90deg, #64b5f6, #a78bfa, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .tagline {
+      color: #8892b0;
+      font-size: 1rem;
+      max-width: 480px;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 22px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    /* ── Cards ── */
+    .app-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 28px 26px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      border-radius: inherit;
+      transition: opacity 0.3s;
+      background: var(--glow);
+    }
+
+    .app-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent, rgba(255,255,255,0.22));
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px var(--accent, transparent);
+    }
+    .app-card:hover::before { opacity: 0.06; }
+
+    /* Per-card accent colours */
+    .card-wheel   { --accent: #ffd700; --glow: radial-gradient(circle at top left, #ffd700, transparent 60%); }
+    .card-timer   { --accent: #00c87a; --glow: radial-gradient(circle at top left, #00c87a, transparent 60%); }
+    .card-vote    { --accent: #64b5f6; --glow: radial-gradient(circle at top left, #64b5f6, transparent 60%); }
+    .card-ice     { --accent: #64d2ff; --glow: radial-gradient(circle at top left, #64d2ff, transparent 60%); }
+
+    .card-emoji { font-size: 2.8rem; line-height: 1; }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .card-desc {
+      font-size: 0.88rem;
+      color: #8892b0;
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      color: #8892b0;
+      width: fit-content;
+    }
+
+    .card-arrow {
+      align-self: flex-end;
+      font-size: 1.2rem;
+      color: var(--accent, #fff);
+      opacity: 0.7;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .app-card:hover .card-arrow { opacity: 1; transform: translateX(4px); }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 56px;
+      font-size: 0.8rem;
+      color: #3d4a62;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">🚀</div>
+    <h1>InnoByte Event Utils</h1>
+    <p class="tagline">A suite of mini-apps to keep your Hackathon running smoothly. Pick a tool and let the fun begin!</p>
+  </header>
+
+  <main class="grid">
+
+    <a href="decision-wheel/index.html" class="app-card card-wheel">
+      <div class="card-emoji">🎡</div>
+      <div class="card-title">Decision Wheel</div>
+      <p class="card-desc">
+        Spin the wheel to pick a random team for the first presentation slot.
+        Add team names, click spin, and watch the confetti fly!
+      </p>
+      <div class="card-badge">🎨 CSS Animation &nbsp;·&nbsp; 🧮 Canvas</div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a href="pitch-timer/index.html" class="app-card card-timer">
+      <div class="card-emoji">⏱️</div>
+      <div class="card-title">Pitch-Perfect Timer</div>
+      <p class="card-desc">
+        Keep presenters on time with a high-visibility countdown.
+        Colours shift Green → Yellow → Red, with a buzzer at the end.
+      </p>
+      <div class="card-badge">⚡ setInterval &nbsp;·&nbsp; 🔔 Web Audio API</div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a href="innovote/index.html" class="app-card card-vote">
+      <div class="card-emoji">🗳️</div>
+      <div class="card-title">InnoVote Poll</div>
+      <p class="card-desc">
+        Real-time People's Choice voting. Add teams, collect votes, and
+        watch the live bar chart update instantly.
+      </p>
+      <div class="card-badge">💾 LocalStorage &nbsp;·&nbsp; 📊 Live chart</div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a href="ice-breakers/index.html" class="app-card card-ice">
+      <div class="card-emoji">🧊</div>
+      <div class="card-title">Ice-Breaker Generator</div>
+      <p class="card-desc">
+        Break the ice between teams with random scientific debate topics and
+        "Would You Rather" prompts. Filter by category or save your favourites.
+      </p>
+      <div class="card-badge">📚 JSON data &nbsp;·&nbsp; 🎲 Randomiser</div>
+      <span class="card-arrow">→</span>
+    </a>
+
+  </main>
+
+  <footer>
+    Built with ❤️ for the ByteCraft Scientific Club · InnoByte Hackathon
+  </footer>
+
+</body>
+</html>

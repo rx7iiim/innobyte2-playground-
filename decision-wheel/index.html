@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎡 Decision Wheel – InnoByte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+      text-align: center;
+      text-shadow: 0 0 20px rgba(255,200,0,0.6);
+    }
+
+    .subtitle {
+      color: #aaa;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+
+    .app-layout {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    /* ---- Wheel panel ---- */
+    .wheel-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: 360px;
+      height: 360px;
+    }
+
+    #wheel-canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(255,200,0,0.35), 0 0 0 6px #ffd700;
+    }
+
+    /* Pointer arrow at top */
+    .pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 30px solid #ffd700;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+      z-index: 10;
+    }
+
+    /* Center hub */
+    .hub {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 30%, #ffd700 100%);
+      border: 3px solid #fff;
+      box-shadow: 0 0 12px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
+    #spin-btn {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 44px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(255,165,0,0.5);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #spin-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 28px rgba(255,165,0,0.7); }
+    #spin-btn:active:not(:disabled) { transform: scale(0.97); }
+    #spin-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ---- Side panel ---- */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 240px;
+      max-width: 300px;
+      flex: 1;
+    }
+
+    .side-panel h2 { font-size: 1.1rem; color: #ffd700; }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    #team-input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 2px solid #555;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #team-input::placeholder { color: #888; }
+    #team-input:focus { border-color: #ffd700; }
+
+    .btn-add {
+      background: #ffd700;
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-add:hover { background: #ffb300; }
+
+    .team-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .team-list::-webkit-scrollbar { width: 6px; }
+    .team-list::-webkit-scrollbar-track { background: transparent; }
+    .team-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+    .team-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      border-left: 4px solid var(--color, #ffd700);
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .team-list li .remove-btn {
+      background: none;
+      border: none;
+      color: #ff6b6b;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .team-list li .remove-btn:hover { background: rgba(255,107,107,0.15); }
+
+    .hint {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: -4px;
+    }
+
+    /* ---- Winner overlay ---- */
+    #winner-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    #winner-overlay.show { display: flex; }
+
+    .winner-box {
+      background: linear-gradient(135deg, #1a1a2e, #302b63);
+      border: 3px solid #ffd700;
+      border-radius: 20px;
+      padding: 40px 60px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,200,0,0.4);
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .winner-box .emoji { font-size: 3rem; }
+    .winner-box h2 { font-size: 1.2rem; color: #ffd700; margin: 8px 0 4px; }
+    .winner-box p  { font-size: 2rem; font-weight: 800; }
+
+    #close-overlay {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #close-overlay:hover { background: rgba(255,255,255,0.22); }
+
+    /* ---- Confetti canvas ---- */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    @media (max-width: 600px) {
+      .wheel-wrapper { width: 280px; height: 280px; }
+      .winner-box { padding: 30px 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎡 Decision Wheel</h1>
+  <p class="subtitle">Spin to pick your presenter – no excuses!</p>
+
+  <div class="app-layout">
+
+    <div class="wheel-panel">
+      <div class="wheel-wrapper">
+        <div class="pointer"></div>
+        <canvas id="wheel-canvas" width="360" height="360"></canvas>
+        <div class="hub"></div>
+      </div>
+      <button id="spin-btn">🌀 SPIN!</button>
+    </div>
+
+    <div class="side-panel">
+      <h2>🏷️ Teams</h2>
+      <div class="input-row">
+        <input id="team-input" type="text" placeholder="Enter team name…" maxlength="30" />
+        <button class="btn-add" id="add-btn">+</button>
+      </div>
+      <p class="hint">Add at least 2 teams to spin.</p>
+      <ul class="team-list" id="team-list"></ul>
+    </div>
+
+  </div>
+
+  <!-- Winner overlay -->
+  <div id="winner-overlay">
+    <div class="winner-box">
+      <div class="emoji">🏆</div>
+      <h2>And the winner is…</h2>
+      <p id="winner-name">Team Alpha</p>
+    </div>
+    <button id="close-overlay">Close</button>
+  </div>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <script>
+    // ── Palette ────────────────────────────────────────────
+    const COLORS = [
+      '#FF6384','#36A2EB','#FFCE56','#4BC0C0',
+      '#9966FF','#FF9F40','#00D2FF','#FF6B6B',
+      '#6BCB77','#845EC2','#F9C74F','#43AA8B',
+    ];
+
+    // ── State ──────────────────────────────────────────────
+    let teams = ['Team Alpha', 'Team Beta', 'Team Gamma'];
+    let spinning = false;
+    let currentAngle = 0;
+
+    // ── Canvas setup ────────────────────────────────────────
+    const canvas  = document.getElementById('wheel-canvas');
+    const ctx     = canvas.getContext('2d');
+    const SIZE    = canvas.width;
+    const CX      = SIZE / 2;
+    const CY      = SIZE / 2;
+    const RADIUS  = CX - 4;
+
+    // ── Draw Wheel ──────────────────────────────────────────
+    function drawWheel(angle = 0) {
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      if (teams.length === 0) {
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#888';
+        ctx.font = '16px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Add teams to start!', CX, CY);
+        return;
+      }
+
+      const arc = (2 * Math.PI) / teams.length;
+      teams.forEach((team, i) => {
+        const start = angle + i * arc;
+        const end   = start + arc;
+
+        // Slice
+        ctx.beginPath();
+        ctx.moveTo(CX, CY);
+        ctx.arc(CX, CY, RADIUS, start, end);
+        ctx.closePath();
+        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Label
+        ctx.save();
+        ctx.translate(CX, CY);
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 4;
+
+        const maxLen = 14;
+        const label  = team.length > maxLen ? team.slice(0, maxLen - 1) + '…' : team;
+        const fontSize = teams.length > 8 ? 11 : 14;
+        ctx.font = `bold ${fontSize}px Segoe UI`;
+        ctx.fillText(label, RADIUS - 12, 0);
+        ctx.restore();
+      });
+    }
+
+    // ── Spin Animation ──────────────────────────────────────
+    function spin() {
+      if (spinning || teams.length < 2) return;
+      spinning = true;
+      document.getElementById('spin-btn').disabled = true;
+
+      const extraSpins   = 5 + Math.random() * 5;          // 5-10 full rotations
+      const stopAngle    = Math.random() * 2 * Math.PI;
+      const totalDelta   = extraSpins * 2 * Math.PI + stopAngle;
+      const duration     = 4000 + Math.random() * 1500;     // 4-5.5 s
+      const startTime    = performance.now();
+      const startAngle   = currentAngle;
+
+      function easeOut(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function frame(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        currentAngle = startAngle + totalDelta * easeOut(t);
+        drawWheel(currentAngle);
+
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          spinning = false;
+          document.getElementById('spin-btn').disabled = false;
+          showWinner();
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    // ── Winner Detection ────────────────────────────────────
+    function getWinner() {
+      // Pointer is at top (−π/2 from positive-x axis in canvas coords).
+      // The wheel's 0-angle starts at 3 o'clock, so pointer is at angle = -Math.PI/2.
+      const arc = (2 * Math.PI) / teams.length;
+      // Normalise current rotation so it's positive
+      const norm = ((currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      // Pointer in wheel's reference frame
+      const pointer = (((-Math.PI / 2) - norm) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      const idx = Math.floor(pointer / arc) % teams.length;
+      return teams[idx];
+    }
+
+    function showWinner() {
+      const winner = getWinner();
+      document.getElementById('winner-name').textContent = winner;
+      document.getElementById('winner-overlay').classList.add('show');
+      startConfetti();
+    }
+
+    document.getElementById('close-overlay').addEventListener('click', () => {
+      document.getElementById('winner-overlay').classList.remove('show');
+      stopConfetti();
+    });
+
+    // ── Team Management ─────────────────────────────────────
+    function colorForIndex(i) { return COLORS[i % COLORS.length]; }
+
+    function renderList() {
+      const ul = document.getElementById('team-list');
+      ul.innerHTML = '';
+      teams.forEach((name, i) => {
+        const li = document.createElement('li');
+        li.style.setProperty('--color', colorForIndex(i));
+        li.innerHTML = `<span>${name}</span>
+          <button class="remove-btn" data-i="${i}" title="Remove">✕</button>`;
+        ul.appendChild(li);
+      });
+      ul.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          teams.splice(+btn.dataset.i, 1);
+          renderList();
+          drawWheel(currentAngle);
+        });
+      });
+      drawWheel(currentAngle);
+    }
+
+    function addTeam() {
+      const input = document.getElementById('team-input');
+      const name  = input.value.trim();
+      if (!name || teams.includes(name)) return;
+      teams.push(name);
+      input.value = '';
+      renderList();
+    }
+
+    document.getElementById('add-btn').addEventListener('click', addTeam);
+    document.getElementById('team-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addTeam();
+    });
+    document.getElementById('spin-btn').addEventListener('click', spin);
+
+    // ── Confetti ────────────────────────────────────────────
+    const confCanvas = document.getElementById('confetti-canvas');
+    const confCtx    = confCanvas.getContext('2d');
+    let confPieces   = [];
+    let confAnimId   = null;
+
+    const CONF_COLORS = ['#ffd700','#ff6384','#36a2eb','#4bc0c0','#ff9f40','#9966ff','#6bcb77'];
+
+    function resizeConf() {
+      confCanvas.width  = window.innerWidth;
+      confCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConf);
+    resizeConf();
+
+    function startConfetti() {
+      confPieces = Array.from({ length: 160 }, () => ({
+        x:    Math.random() * confCanvas.width,
+        y:    Math.random() * -confCanvas.height,
+        r:    4 + Math.random() * 6,
+        color: CONF_COLORS[Math.floor(Math.random() * CONF_COLORS.length)],
+        speed: 2 + Math.random() * 4,
+        drift: (Math.random() - 0.5) * 2,
+        rot:   Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.2,
+      }));
+      animateConfetti();
+    }
+
+    function animateConfetti() {
+      confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      confPieces.forEach(p => {
+        p.y   += p.speed;
+        p.x   += p.drift;
+        p.rot += p.rotSpeed;
+
+        confCtx.save();
+        confCtx.translate(p.x, p.y);
+        confCtx.rotate(p.rot);
+        confCtx.fillStyle = p.color;
+        confCtx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+        confCtx.restore();
+      });
+      // Remove off-screen pieces
+      confPieces = confPieces.filter(p => p.y < confCanvas.height + 20);
+
+      if (confPieces.length > 0) {
+        confAnimId = requestAnimationFrame(animateConfetti);
+      } else {
+        confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      }
+    }
+
+    function stopConfetti() {
+      if (confAnimId) cancelAnimationFrame(confAnimId);
+      confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      confPieces = [];
+    }
+
+    // ── Init ────────────────────────────────────────────────
+    renderList();
+  </script>
+</body>
+</html>

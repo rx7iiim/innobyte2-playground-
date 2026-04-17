@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🗳️ InnoVote – InnoByte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a192f, #112240);
+      min-height: 100vh;
+      padding: 24px 16px;
+      color: #e6f1ff;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 4px;
+      text-shadow: 0 0 20px rgba(100,180,255,0.5);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #8892b0;
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* ── Add team section ── */
+    .add-section {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+
+    .add-section h2 {
+      font-size: 0.85rem;
+      color: #64b5f6;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #team-input {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 10px 16px;
+      color: #e6f1ff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #team-input::placeholder { color: #555f75; }
+    #team-input:focus { border-color: #64b5f6; }
+
+    .btn-primary {
+      background: #64b5f6;
+      color: #0a192f;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-primary:hover { background: #90caf9; }
+    .btn-primary:active { transform: scale(0.97); }
+
+    /* ── Vote cards ── */
+    .vote-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .vote-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 14px 16px;
+      animation: fadeUp 0.25s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .team-name {
+      font-size: 1rem;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .vote-count {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #64b5f6;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .vote-btn {
+      background: linear-gradient(135deg, #1565c0, #1e88e5);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 2px 10px rgba(30,136,229,0.35);
+      white-space: nowrap;
+    }
+    .vote-btn:hover { box-shadow: 0 4px 18px rgba(30,136,229,0.6); transform: scale(1.04); }
+    .vote-btn:active { transform: scale(0.96); }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #546e7a;
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .remove-btn:hover { color: #ef5350; background: rgba(239,83,80,0.12); }
+
+    /* ── Bar ── */
+    .bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #1e88e5, #64b5f6);
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pct-label {
+      font-size: 0.75rem;
+      color: #546e7a;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* ── Footer bar ── */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .total-label {
+      font-size: 0.85rem;
+      color: #8892b0;
+    }
+
+    .total-label strong { color: #e6f1ff; }
+
+    .btn-reset {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #8892b0;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-reset:hover { background: rgba(239,83,80,0.15); color: #ef5350; border-color: #ef5350; }
+
+    .empty-state {
+      text-align: center;
+      color: #546e7a;
+      font-size: 0.9rem;
+      padding: 28px;
+    }
+
+    /* ── Voted flash ── */
+    @keyframes voteFlash {
+      0%   { background: rgba(100,181,246,0.25); }
+      100% { background: rgba(255,255,255,0.04); }
+    }
+    .vote-card.flashed { animation: voteFlash 0.5s ease; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🗳️ InnoVote</h1>
+  <p class="subtitle">Cast your vote for the People's Choice award!</p>
+
+  <!-- Add team -->
+  <div class="add-section">
+    <h2>Add a Team</h2>
+    <div class="input-row">
+      <input id="team-input" type="text" placeholder="Team name…" maxlength="40" />
+      <button class="btn-primary" id="add-btn">+ Add Team</button>
+    </div>
+  </div>
+
+  <!-- Vote list -->
+  <div class="vote-list" id="vote-list">
+    <div class="empty-state" id="empty-msg">No teams yet. Add some above! 👆</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-bar">
+    <p class="total-label">Total votes: <strong id="total-display">0</strong></p>
+    <button class="btn-reset" id="reset-btn">🗑️ Reset All Votes</button>
+  </div>
+
+</div>
+
+<script>
+  // ── State ────────────────────────────────────────────────
+  const STORAGE_KEY = 'innovote_data';
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return { teams: [
+      { name: 'Team Alpha', votes: 0 },
+      { name: 'Team Beta',  votes: 0 },
+      { name: 'Team Gamma', votes: 0 },
+    ]};
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  let state = loadState();
+
+  // ── Helpers ──────────────────────────────────────────────
+  function totalVotes() { return state.teams.reduce((s, t) => s + t.votes, 0); }
+
+  function pct(votes) {
+    const t = totalVotes();
+    return t === 0 ? 0 : Math.round((votes / t) * 100);
+  }
+
+  // ── Render ───────────────────────────────────────────────
+  const list      = document.getElementById('vote-list');
+  const totalDisp = document.getElementById('total-display');
+  const emptyMsg  = document.getElementById('empty-msg');
+
+  function render() {
+    // Remove old cards (but keep empty-msg node detached)
+    list.innerHTML = '';
+
+    if (state.teams.length === 0) {
+      list.appendChild(emptyMsg);
+      totalDisp.textContent = '0';
+      return;
+    }
+
+    // Sort by votes desc for display
+    const sorted = [...state.teams].sort((a,b) => b.votes - a.votes);
+
+    sorted.forEach(team => {
+      const p = pct(team.votes);
+      const card = document.createElement('div');
+      card.className = 'vote-card';
+      card.dataset.name = team.name;
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="team-name">${escHtml(team.name)}</span>
+          <span class="vote-count">${team.votes}</span>
+          <button class="vote-btn" data-action="vote">👍 Vote</button>
+          <button class="remove-btn" data-action="remove" title="Remove team">✕</button>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div>
+        <div class="pct-label">${p}%</div>
+      `;
+      list.appendChild(card);
+    });
+
+    totalDisp.textContent = totalVotes();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Events ───────────────────────────────────────────────
+  list.addEventListener('click', e => {
+    const btn  = e.target.closest('[data-action]');
+    if (!btn) return;
+    const card = btn.closest('.vote-card');
+    const name = card.dataset.name;
+
+    if (btn.dataset.action === 'vote') {
+      const team = state.teams.find(t => t.name === name);
+      if (team) {
+        team.votes++;
+        saveState();
+        render();
+        // Flash
+        const newCard = list.querySelector(`[data-name="${CSS.escape(name)}"]`);
+        if (newCard) {
+          newCard.style.animation = 'none';
+          void newCard.offsetWidth;
+          newCard.style.animation = '';
+          newCard.classList.add('flashed');
+          newCard.addEventListener('animationend', () => newCard.classList.remove('flashed'), { once: true });
+        }
+      }
+    }
+
+    if (btn.dataset.action === 'remove') {
+      state.teams = state.teams.filter(t => t.name !== name);
+      saveState();
+      render();
+    }
+  });
+
+  document.getElementById('add-btn').addEventListener('click', addTeam);
+  document.getElementById('team-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTeam();
+  });
+
+  function addTeam() {
+    const input = document.getElementById('team-input');
+    const name  = input.value.trim();
+    if (!name) return;
+    if (state.teams.some(t => t.name === name)) {
+      input.select();
+      return;
+    }
+    state.teams.push({ name, votes: 0 });
+    input.value = '';
+    saveState();
+    render();
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('Reset all vote counts?')) return;
+    state.teams.forEach(t => t.votes = 0);
+    saveState();
+    render();
+  });
+
+  // ── Init ─────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>

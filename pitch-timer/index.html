@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⏱️ Pitch Timer – InnoByte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d0d;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #fff;
+      transition: background 0.8s;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+      text-align: center;
+      opacity: 0.85;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 40px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    /* ── Timer display ── */
+    .timer-display {
+      font-size: clamp(5rem, 20vw, 10rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-shadow: 0 0 60px var(--glow, #00c87a);
+      color: var(--fg, #00c87a);
+      transition: color 0.5s, text-shadow 0.5s;
+      user-select: none;
+    }
+
+    .timer-label {
+      font-size: 0.9rem;
+      color: #777;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ── Progress ring ── */
+    .ring-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .ring-wrapper svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-90deg);
+    }
+
+    #progress-ring {
+      transition: stroke-dashoffset 0.5s linear, stroke 0.5s;
+    }
+
+    .inner-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 50px;
+      padding: 14px 34px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn:active { transform: scale(0.97); }
+
+    #start-btn  { background: #00c87a; color: #000; box-shadow: 0 4px 20px rgba(0,200,122,0.4); }
+    #pause-btn  { background: #ffb300; color: #000; box-shadow: 0 4px 20px rgba(255,179,0,0.4); display: none; }
+    #reset-btn  { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #444; }
+
+    /* ── Duration selector ── */
+    .duration-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .duration-row span { font-size: 0.85rem; color: #888; }
+
+    .dur-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid #444;
+      color: #ccc;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .dur-btn:hover,
+    .dur-btn.active { background: rgba(255,255,255,0.18); border-color: #aaa; color: #fff; }
+
+    /* ── Custom time ── */
+    .custom-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .custom-row label { font-size: 0.8rem; color: #888; }
+
+    .custom-row input {
+      width: 58px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      text-align: center;
+      outline: none;
+    }
+    .custom-row input:focus { border-color: #888; }
+
+    /* ── Buzz overlay ── */
+    #buzz-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(200,0,0,0.15);
+      z-index: 50;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      backdrop-filter: blur(4px);
+    }
+    #buzz-overlay.show { display: flex; }
+
+    .buzz-box {
+      background: #1a0000;
+      border: 3px solid #ff2222;
+      border-radius: 20px;
+      padding: 40px 60px;
+      text-align: center;
+      box-shadow: 0 0 80px rgba(255,0,0,0.5);
+      animation: buzzing 0.12s infinite alternate;
+    }
+
+    @keyframes buzzing {
+      from { transform: translateX(-3px) rotate(-1deg); }
+      to   { transform: translateX(3px)  rotate(1deg); }
+    }
+
+    .buzz-box .icon { font-size: 3.5rem; }
+    .buzz-box h2 { font-size: 2rem; color: #ff4444; margin: 10px 0 4px; }
+    .buzz-box p  { color: #aaa; font-size: 0.95rem; }
+
+    #dismiss-btn {
+      background: #ff2222;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 36px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    /* ── Flashing body when critical ── */
+    body.flash-red {
+      animation: flashBG 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes flashBG {
+      from { background: #0d0d0d; }
+      to   { background: #1a0000; }
+    }
+
+    @media (max-width: 480px) {
+      .buzz-box { padding: 30px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⏱️ Pitch-Perfect Timer</h1>
+  <p class="subtitle">Keep your presenters on time – every second counts.</p>
+
+  <div class="duration-row">
+    <span>Presets:</span>
+    <button class="dur-btn" data-mins="3">3 min</button>
+    <button class="dur-btn active" data-mins="5">5 min</button>
+    <button class="dur-btn" data-mins="7">7 min</button>
+    <button class="dur-btn" data-mins="10">10 min</button>
+  </div>
+
+  <div class="custom-row">
+    <label for="custom-mins">Custom:</label>
+    <input id="custom-mins" type="number" min="1" max="99" value="" placeholder="mm" />
+    <label for="custom-secs">:</label>
+    <input id="custom-secs" type="number" min="0" max="59" value="" placeholder="ss" />
+  </div>
+
+  <div class="ring-wrapper">
+    <svg width="340" height="340" viewBox="0 0 340 340">
+      <!-- Background ring -->
+      <circle cx="170" cy="170" r="152" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14" />
+      <!-- Progress ring -->
+      <circle id="progress-ring" cx="170" cy="170" r="152"
+        fill="none" stroke="#00c87a" stroke-width="14"
+        stroke-linecap="round" />
+    </svg>
+    <div class="inner-content">
+      <div class="timer-display" id="timer-display">05:00</div>
+      <div class="timer-label" id="timer-label">Ready</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="start-btn">▶ Start</button>
+    <button class="btn" id="pause-btn">⏸ Pause</button>
+    <button class="btn" id="reset-btn">↺ Reset</button>
+  </div>
+
+  <!-- Buzz overlay -->
+  <div id="buzz-overlay">
+    <div class="buzz-box">
+      <div class="icon">🔔</div>
+      <h2>TIME'S UP!</h2>
+      <p>Wrap it up – the crowd awaits!</p>
+    </div>
+    <button id="dismiss-btn">Dismiss</button>
+  </div>
+
+  <script>
+    // ── Config ──────────────────────────────────────────────
+    const CIRC = 2 * Math.PI * 152;   // circumference of ring
+    let totalSeconds  = 5 * 60;        // default 5 min
+    let remaining     = totalSeconds;
+    let intervalId    = null;
+    let running       = false;
+
+    // ── DOM refs ─────────────────────────────────────────────
+    const display     = document.getElementById('timer-display');
+    const label       = document.getElementById('timer-label');
+    const ring        = document.getElementById('progress-ring');
+    const startBtn    = document.getElementById('start-btn');
+    const pauseBtn    = document.getElementById('pause-btn');
+    const resetBtn    = document.getElementById('reset-btn');
+    const buzzOverlay = document.getElementById('buzz-overlay');
+    const dismissBtn  = document.getElementById('dismiss-btn');
+
+    ring.style.strokeDasharray  = CIRC;
+    ring.style.strokeDashoffset = 0;
+
+    // ── Color thresholds ────────────────────────────────────
+    function getColor(ratio) {
+      // ratio = remaining / total   (1 = full, 0 = empty)
+      if (ratio > 0.4) return { fg: '#00c87a', glow: '#00c87a' };   // green
+      if (ratio > 0.2) return { fg: '#ffb300', glow: '#ffb300' };   // yellow
+      return                { fg: '#ff3333', glow: '#ff2222' };      // red
+    }
+
+    function applyColor(ratio) {
+      const { fg, glow } = getColor(ratio);
+      document.documentElement.style.setProperty('--fg',   fg);
+      document.documentElement.style.setProperty('--glow', glow);
+      display.style.color      = fg;
+      display.style.textShadow = `0 0 60px ${glow}`;
+      ring.style.stroke        = fg;
+    }
+
+    // ── Render ──────────────────────────────────────────────
+    function fmt(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+
+    function render() {
+      display.textContent = fmt(remaining);
+      const ratio = totalSeconds > 0 ? remaining / totalSeconds : 1;
+      ring.style.strokeDashoffset = CIRC * (1 - ratio);
+      applyColor(ratio);
+
+      // Flash body when < 30 s
+      if (remaining <= 30 && running) {
+        document.body.classList.add('flash-red');
+      } else {
+        document.body.classList.remove('flash-red');
+      }
+    }
+
+    // ── Web Audio buzzer ────────────────────────────────────
+    let audioCtx = null;
+
+    function playBuzzer() {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const beepCount = 3;
+        const beepDur   = 0.25;
+        const gap       = 0.15;
+        for (let i = 0; i < beepCount; i++) {
+          const osc  = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type      = 'square';
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.6, audioCtx.currentTime + i * (beepDur + gap));
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * (beepDur + gap) + beepDur);
+          osc.start(audioCtx.currentTime + i * (beepDur + gap));
+          osc.stop(audioCtx.currentTime  + i * (beepDur + gap) + beepDur);
+        }
+      } catch(e) {
+        console.warn('Audio not available:', e);
+      }
+    }
+
+    // ── Timer logic ─────────────────────────────────────────
+    function tick() {
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        running = false;
+        remaining = 0;
+        render();
+        document.body.classList.remove('flash-red');
+        showBuzz();
+        updateUI();
+        return;
+      }
+      remaining--;
+      render();
+    }
+
+    function start() {
+      if (running || remaining <= 0) return;
+      // Unlock audio context on first user gesture
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+      }
+      running    = true;
+      intervalId = setInterval(tick, 1000);
+      label.textContent = 'Running';
+      updateUI();
+    }
+
+    function pause() {
+      if (!running) return;
+      clearInterval(intervalId);
+      running = false;
+      label.textContent = 'Paused';
+      document.body.classList.remove('flash-red');
+      updateUI();
+    }
+
+    function reset() {
+      clearInterval(intervalId);
+      running   = false;
+      remaining = totalSeconds;
+      document.body.classList.remove('flash-red');
+      label.textContent = 'Ready';
+      render();
+      updateUI();
+    }
+
+    function updateUI() {
+      startBtn.style.display = running ? 'none' : 'inline-block';
+      pauseBtn.style.display = running ? 'inline-block' : 'none';
+    }
+
+    function showBuzz() {
+      playBuzzer();
+      buzzOverlay.classList.add('show');
+    }
+
+    startBtn.addEventListener('click', start);
+    pauseBtn.addEventListener('click', pause);
+    resetBtn.addEventListener('click', reset);
+    dismissBtn.addEventListener('click', () => {
+      buzzOverlay.classList.remove('show');
+    });
+
+    // ── Presets ─────────────────────────────────────────────
+    document.querySelectorAll('.dur-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (running) return;
+        document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        totalSeconds = +btn.dataset.mins * 60;
+        remaining    = totalSeconds;
+        document.getElementById('custom-mins').value = '';
+        document.getElementById('custom-secs').value = '';
+        label.textContent = 'Ready';
+        render();
+      });
+    });
+
+    // ── Custom input ────────────────────────────────────────
+    function applyCustom() {
+      if (running) return;
+      const m = parseInt(document.getElementById('custom-mins').value) || 0;
+      const s = parseInt(document.getElementById('custom-secs').value) || 0;
+      const total = m * 60 + s;
+      if (total <= 0) return;
+      document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+      totalSeconds = total;
+      remaining    = total;
+      label.textContent = 'Ready';
+      render();
+    }
+
+    document.getElementById('custom-mins').addEventListener('change', applyCustom);
+    document.getElementById('custom-secs').addEventListener('change', applyCustom);
+
+    // ── Init ────────────────────────────────────────────────
+    render();
+    updateUI();
+  </script>
+</body>
+</html>
